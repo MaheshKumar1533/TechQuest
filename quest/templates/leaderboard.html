@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Leaderboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50 p-8">
+    <h1 class="text-2xl font-bold mb-6">{{ quiz.title }} - Leaderboard</h1>
+    <table class="table-auto w-full bg-white shadow rounded">
+        <thead>
+            <tr class="bg-gray-200">
+                <th class="px-4 py-2">Rank</th>
+                <th class="px-4 py-2">User</th>
+                <th class="px-4 py-2">Score</th>
+                <th class="px-4 py-2">Time Taken (s)</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for user in participants %}
+            <tr class="border-t">
+                <td class="px-4 py-2">{{ forloop.counter }}</td>
+                <td class="px-4 py-2">{{ user.user.username }}</td>
+                <td class="px-4 py-2">{{ user.total_score }}</td>
+                <td class="px-4 py-2">{{ user.total_time_taken }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

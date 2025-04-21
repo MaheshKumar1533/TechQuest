@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Round {{ round.round_number }} - {{ quiz.title }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script>
+        // Prevent accidental reload/close
+        window.onbeforeunload = function () {
+            return "Are you sure you want to leave? Your progress might be lost.";
+        };
+
+        // Request Fullscreen on load
+        document.addEventListener('DOMContentLoaded', () => {
+            const goFullScreen = () => {
+                const docEl = document.documentElement;
+                if (docEl.requestFullscreen) {
+                    docEl.requestFullscreen();
+                } else if (docEl.mozRequestFullScreen) {
+                    docEl.mozRequestFullScreen();
+                } else if (docEl.webkitRequestFullscreen) {
+                    docEl.webkitRequestFullscreen();
+                } else if (docEl.msRequestFullscreen) {
+                    docEl.msRequestFullscreen();
+                }
+            };
+            goFullScreen();
+
+            // Countdown Timer Logic
+            const endTime = new Date("{{ end_time }}");
+            const timerDisplay = document.createElement("div");
+            timerDisplay.className = "fixed top-4 right-4 bg-red-600 text-white px-4 py-2 rounded shadow-lg text-lg";
+            document.body.appendChild(timerDisplay);
+
+            function updateTimer() {
+                const now = new Date();
+                const remaining = endTime - now;
+
+                if (remaining <= 0) {
+                    timerDisplay.textContent = "Time's up! Submitting...";
+                    document.querySelector('form').submit();
+                    return;
+                }
+
+                const minutes = Math.floor((remaining / 1000 / 60) % 60);
+                const seconds = Math.floor((remaining / 1000) % 60);
+                timerDisplay.textContent = `⏳ ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+                setTimeout(updateTimer, 1000);
+            }
+
+            updateTimer();
+        });
+
+        function startTimer(questionId) {
+            var startTime = Date.now();
+            document.getElementById("q" + questionId).onchange = function () {
+                var endTime = Date.now();
+                var timeTaken = (endTime - startTime) / 1000;
+                document.getElementById('time_taken_' + questionId).value = timeTaken;
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-100 py-10 px-5">
+
+    <!-- Overlay for entering fullscreen -->
+    <div id="fullscreenOverlay" class="fixed inset-0 bg-black bg-opacity-90 flex flex-col items-center justify-center z-50 text-white">
+        <h1 class="text-3xl mb-6">🔒 Fullscreen Required</h1>
+        <button onclick="startQuiz()" class="bg-green-600 px-6 py-3 rounded text-lg">Start Quiz in Fullscreen</button>
+    </div>
+    
+    <!-- Quiz Form -->
+    <form method="post" id="quizForm" class="hidden">
+        {% csrf_token %}
+        <h1 class="text-2xl font-bold mb-4">{{ quiz.title }} - Round {{ round.round_number }}</h1>
+    
+        {% for question in questions %}
+        <div class="mb-6 p-4 bg-white rounded shadow">
+            <p class="mb-2 font-semibold">Q{{ forloop.counter }}. {{ question.text }}</p>
+            {% if question.image %}
+                <img src="{{ question.image.url }}" alt="Question Image" class="mb-2 max-h-48">
+            {% endif %}
+            
+            <div>
+                {% for option in question.shuffled_options %}
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="question_{{ question.id }}" value="{{ option }}" id="q{{ question.id }}_{{ forloop.counter }}" onchange="startTimer({{ question.id }})">
+                        <label class="form-check-label" for="q{{ question.id }}_{{ forloop.counter }}">
+                            {{ option }}
+                        </label>
+                    </div>
+                {% endfor %}
+            </div>
+    
+            <input type="hidden" name="time_taken_{{ question.id }}" id="time_taken_{{ question.id }}" value="0">
+        </div>
+        {% endfor %}
+    
+        <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded mt-4">Submit Round</button>
+    </form>
+    
+    <script>
+        function startQuiz() {
+            let el = document.documentElement;
+    
+            if (el.requestFullscreen) el.requestFullscreen();
+            else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+            else if (el.mozRequestFullScreen) el.mozRequestFullScreen();
+            else if (el.msRequestFullscreen) el.msRequestFullscreen();
+    
+            document.getElementById('fullscreenOverlay').style.display = 'none';
+            document.getElementById('quizForm').classList.remove('hidden');
+    
+            startCountdown();
+        }
+    
+        function checkFullscreen() {
+            return document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
+        }
+    
+        function enforceFullscreen() {
+            if (!checkFullscreen()) {
+                document.getElementById('fullscreenOverlay').style.display = 'flex';
+                document.getElementById('quizForm').classList.add('hidden');
+            }
+        }
+    
+        document.addEventListener('fullscreenchange', enforceFullscreen);
+        document.addEventListener('webkitfullscreenchange', enforceFullscreen);
+        document.addEventListener('mozfullscreenchange', enforceFullscreen);
+        document.addEventListener('MSFullscreenChange', enforceFullscreen);
+    
+        function startTimer(questionId) {
+            var startTime = Date.now();
+            document.getElementById("q" + questionId).onchange = function () {
+                var endTime = Date.now();
+                var timeTaken = (endTime - startTime) / 1000;
+                document.getElementById('time_taken_' + questionId).value = timeTaken;
+            }
+        }
+    
+        function startCountdown() {
+            const endTime = new Date("{{ end_time }}");
+            const timerDisplay = document.createElement("div");
+            timerDisplay.className = "fixed top-4 right-4 bg-red-600 text-white px-4 py-2 rounded shadow-lg text-lg z-50";
+            document.body.appendChild(timerDisplay);
+    
+            function updateTimer() {
+                const now = new Date();
+                const remaining = endTime - now;
+    
+                if (remaining <= 0) {
+                    timerDisplay.textContent = "Time's up! Submitting...";
+                    document.querySelector('form').submit();
+                    return;
+                }
+    
+                const minutes = Math.floor((remaining / 1000 / 60) % 60);
+                const seconds = Math.floor((remaining / 1000) % 60);
+                timerDisplay.textContent = `⏳ ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    
+                setTimeout(updateTimer, 1000);
+            }
+    
+            updateTimer();
+        }
+    
+        window.onbeforeunload = function () {
+            return "Are you sure you want to leave? Your progress might be lost.";
+        };
+    </script>
+    <script>
+        let exitCount = 0;
+        const maxExitCount = 3;
+    
+        function checkFullscreen() {
+            return document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
+        }
+    
+        function enforceFullscreen() {
+            if (!checkFullscreen()) {
+                exitCount++;
+                document.getElementById('exitCountDisplay').textContent = exitCount;
+                document.getElementById('exitWarning').classList.remove('hidden');
+    
+                // Optional: End quiz if limit exceeded
+                if (exitCount >= maxExitCount) {
+                    alert("❌ You have exited fullscreen too many times. Your quiz will be terminated.");
+                    document.querySelector('form').submit(); // auto-submit or redirect
+                }
+    
+                // Show fullscreen overlay again
+                document.getElementById('fullscreenOverlay').style.display = 'flex';
+                document.getElementById('quizForm').classList.add('hidden');
+            }
+        }
+    
+        document.addEventListener('fullscreenchange', enforceFullscreen);
+        document.addEventListener('webkitfullscreenchange', enforceFullscreen);
+        document.addEventListener('mozfullscreenchange', enforceFullscreen);
+        document.addEventListener('MSFullscreenChange', enforceFullscreen);
+    
+        window.addEventListener('DOMContentLoaded', () => {
+            const input = document.createElement("input");
+            input.type = "hidden";
+            input.name = "fullscreen_exit_count";
+            input.id = "fullscreen_exit_count";
+            input.value = "0";
+            document.getElementById("quizForm").appendChild(input);
+    
+            // Update on submit
+            document.getElementById("quizForm").addEventListener("submit", () => {
+                document.getElementById("fullscreen_exit_count").value = exitCount;
+            });
+        });
+    </script>
+    
+    </body>
+    
+</html>

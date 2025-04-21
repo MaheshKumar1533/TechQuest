@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Bulk Upload{% endblock %}
+
+{% block content %}
+<form method="post" enctype="multipart/form-data" class="bg-white p-6 rounded shadow">
+    {% csrf_token %}
+    <label class="block font-semibold mb-2">Upload Excel or CSV File</label>
+    <input type="file" name="file" class="border p-2 rounded w-full mb-4" required>
+    <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+        Upload Questions
+    </button>
+</form>
+{% endblock %}

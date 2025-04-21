@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ quiz.title }} - Round {{ round.round_number }} Instructions</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script>
+        var countdownTime = {{ minutes }} * 60 + {{ seconds }}; // in seconds
+
+        function updateTimer() {
+            var timerElement = document.getElementById("timer");
+            var minutes = Math.floor(countdownTime / 60);
+            var seconds = countdownTime % 60;
+            timerElement.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+
+            if (countdownTime <= 0) {
+                clearInterval(timerInterval);
+                document.getElementById('proceed-button').disabled = false;  // Enable Proceed Button
+            }
+            countdownTime--;
+        }
+
+        var timerInterval = setInterval(updateTimer, 1000);
+        window.onload = updateTimer;
+    </script>
+</head>
+<body class="bg-gray-100 flex justify-center items-center h-screen">
+    <div class="bg-white p-6 rounded shadow-md w-96">
+        <h1 class="text-xl font-bold mb-4">{{ quiz.title }} - Round {{ round.round_number }} Instructions</h1>
+        <p class="mb-4">Please read the following instructions carefully before starting the quiz:</p>
+        
+        <ul>
+            <li>Each round has a specific time limit.</li>
+            <li>Make sure to answer all questions to the best of your ability.</li>
+            <li>Once you complete the round, submit your answers.</li>
+        </ul>
+
+        <div class="mt-4 text-center text-lg">
+            <p>Time Remaining: <span id="timer">{{ minutes }}:{{ seconds }}</span></p>
+        </div>
+
+        <!-- Proceed Button -->
+        <button id="proceed-button" class="mt-6 w-full bg-green-500 text-white py-2 rounded" disabled onclick="window.location.href='/quiz/{{ quiz.id }}/round/{{ round.round_number }}/';">
+            Proceed to Round {{ round.round_number }}
+        </button>
+    </div>
+</body>
+</html>
