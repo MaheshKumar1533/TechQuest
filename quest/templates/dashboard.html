@@ -1,24 +1,55 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Your Dashboard</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-</head>
-<body class="bg-gray-50 p-8">
-    <h1 class="text-2xl font-bold mb-6">Dashboard</h1>
+{% extends 'base.html' %}
 
-    {% for data in enriched_quizzes %}
-        <div class="bg-white p-4 rounded shadow mb-4">
-            <h2 class="text-xl font-semibold">{{ data.quiz.quiz.title }}</h2>
-            <p><strong>Total Score:</strong> {{ data.quiz.total_score }}</p>
-            <p><strong>Time Taken:</strong> {{ data.quiz.total_time_taken }}s</p>
-            <p><strong>Status:</strong> {% if data.quiz.is_completed %}Completed{% else %}In Progress{% endif %}</p>
-            <p><strong>Approved:</strong> {{ data.quiz.is_approved }}</p>
-            <hr class="my-2">
-            <p><strong>Rounds Attempted:</strong> {{ data.rounds_attempted }}</p>
-            <p><strong>Questions Attempted:</strong> {{ data.questions_attempted }}</p>
-            <p><strong>Correct Answers:</strong> {{ data.correct_answers }}</p>
+{% block title %}Your Dashboard{% endblock %}
+
+{% block content %}
+<div class="mb-6 flex justify-between items-center">
+    <h2 class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary-light to-secondary">Dashboard</h2>
+    <a href="/" class="game-btn py-2 px-4">
+        <i class="fas fa-home mr-2"></i> Home
+    </a>
+</div>
+
+{% for data in enriched_quizzes %}
+<div class="game-card slide-up delay-{{ forloop.counter|add:1 }}00">
+    <div class="card-header">
+        <i class="fas fa-gamepad text-2xl text-purple-400"></i>
+        <h2 class="text-xl font-semibold">{{ data.quiz.quiz.title }}</h2>
+    </div>
+    <div class="p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+            <p class="mb-2"><i class="fas fa-trophy mr-2 text-yellow-400"></i> <strong>Total Score:</strong> <span class="text-lg font-mono">{{ data.quiz.total_score }}</span></p>
+            <p class="mb-2"><i class="fas fa-clock mr-2 text-blue-400"></i> <strong>Time Taken:</strong> <span class="text-lg font-mono">{{ data.quiz.total_time_taken }}s</span></p>
+            <p class="mb-2">
+                <i class="fas fa-circle-check mr-2 {% if data.quiz.is_completed %}text-green-400{% else %}text-yellow-400{% endif %}"></i> 
+                <strong>Status:</strong> 
+                <span class="px-2 py-1 rounded text-sm {% if data.quiz.is_completed %}bg-green-900/30 text-green-300{% else %}bg-yellow-900/30 text-yellow-300{% endif %}">
+                    {% if data.quiz.is_completed %}Completed{% else %}In Progress{% endif %}
+                </span>
+            </p>
         </div>
-    {% endfor %}
+        <div>
+            <p class="mb-2"><i class="fas fa-layer-group mr-2 text-purple-400"></i> <strong>Rounds Attempted:</strong> <span class="font-mono">{{ data.rounds_attempted }}</span></p>
+            <p class="mb-2"><i class="fas fa-question mr-2 text-pink-400"></i> <strong>Questions Attempted:</strong> <span class="font-mono">{{ data.questions_attempted }}</span></p>
+            <p class="mb-2"><i class="fas fa-check-double mr-2 text-green-400"></i> <strong>Correct Answers:</strong> <span class="font-mono">{{ data.correct_answers }}</span></p>
+        </div>
+    </div>
+    <div class="bg-surface-light/50 p-4 flex justify-end">
+        <a href="/quiz/{{ data.quiz.quiz.id }}/rounds" class="game-btn py-2 px-4">
+            <span>Continue</span>
+            <i class="fas fa-arrow-right ml-2"></i>
+        </a>
+    </div>
+</div>
+{% empty %}
+<div class="game-card text-center p-8">
+    <p class="text-text-muted mb-4">You haven't participated in any quizzes yet.</p>
+    <a href="/enter-code" class="game-btn">
+        <i class="fas fa-plus mr-2"></i>
+        <span>Join a Quiz</span>
+    </a>
+</div>
+{% endfor %}
+{% endblock %}
 </body>
 </html>

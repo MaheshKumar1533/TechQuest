@@ -14,7 +14,21 @@ from .models import Round, Quiz, UserQuiz
 
 from django.shortcuts import render, get_object_or_404, redirect
 from .models import Quiz, Round, UserQuiz
+from django.contrib.auth import login, authenticate
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
+
+def logUsr(request):
+    if request.method == 'POST':
+        # register and login user
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        register_user = User.objects.create_user(username=username, password=password)
+        login(request, register_user)
+        return redirect('enter_secret_code')
+    return render(request, 'login.html')
+        
+
 
 @login_required
 def enter_secret_code(request):

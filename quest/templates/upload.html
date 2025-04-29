@@ -1,13 +1,66 @@
-{% extends "base.html" %}
-{% block title %}Bulk Upload{% endblock %}
+{% extends "base.html" %} {% block title %}Bulk Upload{% endblock %} {% block
+content %}
+<div class="game-card slide-up max-w-lg mx-auto">
+	<div class="card-header">
+		<i class="fas fa-upload text-2xl text-blue-400"></i>
+		<h2 class="text-2xl font-bold">Bulk Upload Questions</h2>
+	</div>
+	<div class="p-6">
+		<form method="post" enctype="multipart/form-data">
+			{% csrf_token %}
+			<div class="mb-6">
+				<label class="form-label">
+					<i class="fas fa-file-excel mr-2"></i>
+					Upload Excel or CSV File
+				</label>
+				<div
+					class="mt-2 p-4 border border-dashed border-surface-light rounded-lg text-center"
+				>
+					<input
+						type="file"
+						name="file"
+						class="hidden"
+						id="file-upload"
+						required
+					/>
+					<label for="file-upload" class="cursor-pointer block">
+						<i
+							class="fas fa-cloud-arrow-up text-4xl mb-3 text-primary-light"
+						></i>
+						<div class="text-text-muted">
+							Drop your file here or click to browse
+						</div>
+					</label>
+					<div
+						id="file-name"
+						class="mt-3 text-sm text-text-muted"
+					></div>
+				</div>
+			</div>
+			<button type="submit" class="game-btn w-full">
+				<i class="fas fa-file-import mr-2"></i>
+				Upload Questions
+			</button>
+		</form>
+	</div>
+</div>
 
-{% block content %}
-<form method="post" enctype="multipart/form-data" class="bg-white p-6 rounded shadow">
-    {% csrf_token %}
-    <label class="block font-semibold mb-2">Upload Excel or CSV File</label>
-    <input type="file" name="file" class="border p-2 rounded w-full mb-4" required>
-    <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
-        Upload Questions
-    </button>
-</form>
+<div class="mt-6 text-center">
+	<a
+		href="/dashboard"
+		class="inline-block text-text-muted hover:text-text transition-colors duration-200"
+	>
+		<i class="fas fa-arrow-left mr-2"></i>
+		Back to Dashboard
+	</a>
+</div>
+{% endblock %} {% block scripts %}
+<script>
+	document
+		.getElementById("file-upload")
+		.addEventListener("change", function (e) {
+			var fileName = e.target.files[0] ? e.target.files[0].name : "";
+			document.getElementById("file-name").textContent = fileName;
+		});
+</script>
 {% endblock %}

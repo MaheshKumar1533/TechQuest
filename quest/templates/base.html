@@ -1,14 +1,283 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>{% block title %}TechQuest{% endblock %}</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-50 font-sans text-gray-800">
-    <div class="max-w-4xl mx-auto mt-8 p-4">
-        <h1 class="text-3xl font-bold mb-6 text-blue-600 text-center">TechQuest</h1>
-        {% block content %}{% endblock %}
-    </div>
-</body>
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>{% block title %}TechQuest{% endblock %}</title>
+		<link
+			href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+			rel="stylesheet"
+		/>
+		<link
+			href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
+			rel="stylesheet"
+		/>
+		<link
+			rel="stylesheet"
+			href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+		/>
+		<style>
+			:root {
+				--primary: #6d28d9; /* Purple */
+				--primary-dark: #5b21b6;
+				--primary-light: #ddd6fe;
+				--secondary: #ec4899; /* Pink */
+				--accent: #10b981; /* Green */
+				--background: #0f172a; /* Dark blue */
+				--surface: #1e293b; /* Lighter blue */
+				--surface-light: #334155; /* Even lighter blue */
+				--text: #f8fafc;
+				--text-muted: #94a3b8;
+			}
+
+			/* Base styles */
+			body {
+				font-family: "Outfit", sans-serif;
+				background-color: var(--background);
+				color: var(--text);
+				min-height: 100vh;
+				background-image: radial-gradient(
+						circle at 25% 25%,
+						rgba(109, 40, 217, 0.1) 0%,
+						transparent 40%
+					),
+					radial-gradient(
+						circle at 75% 75%,
+						rgba(236, 72, 153, 0.1) 0%,
+						transparent 40%
+					);
+			}
+
+			/* Neon elements */
+			.neon-border {
+				border: 2px solid transparent;
+				border-radius: 0.5rem;
+				background-clip: padding-box;
+				position: relative;
+			}
+
+			.neon-border::after {
+				content: "";
+				position: absolute;
+				top: -2px;
+				left: -2px;
+				right: -2px;
+				bottom: -2px;
+				background: linear-gradient(
+					45deg,
+					var(--primary),
+					var(--secondary),
+					var(--accent)
+				);
+				z-index: -1;
+				border-radius: 0.5rem;
+				animation: animate-border 3s linear infinite;
+			}
+
+			@keyframes animate-border {
+				0% {
+					filter: blur(3px) hue-rotate(0deg);
+				}
+				100% {
+					filter: blur(3px) hue-rotate(360deg);
+				}
+			}
+
+			/* Card styles */
+			.game-card {
+				background: var(--surface);
+				border-radius: 1rem;
+				overflow: hidden;
+				box-shadow: 0 20px 30px -15px rgba(0, 0, 0, 0.3);
+				transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+				margin-bottom: 2rem;
+			}
+
+			.game-card:hover {
+				transform: translateY(-8px);
+				box-shadow: 0 30px 40px -20px rgba(0, 0, 0, 0.4);
+			}
+
+			.card-header {
+				position: relative;
+				background: var(--surface-light);
+				padding: 1.25rem 1.5rem;
+				display: flex;
+				align-items: center;
+				gap: 1rem;
+				border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+			}
+
+			/* Button styles */
+			.game-btn {
+				background: linear-gradient(
+					45deg,
+					var(--primary),
+					var(--secondary)
+				);
+				color: white;
+				font-weight: 600;
+				padding: 0.875rem 2rem;
+				border-radius: 0.5rem;
+				box-shadow: 0 5px 20px rgba(109, 40, 217, 0.3);
+				transition: all 0.3s ease;
+				position: relative;
+				overflow: hidden;
+				border: none;
+				cursor: pointer;
+				letter-spacing: 0.5px;
+				display: inline-flex;
+				align-items: center;
+				justify-content: center;
+				gap: 0.5rem;
+			}
+
+			.game-btn::before {
+				content: "";
+				position: absolute;
+				top: 0;
+				left: -100%;
+				width: 100%;
+				height: 100%;
+				background: linear-gradient(
+					90deg,
+					transparent,
+					rgba(255, 255, 255, 0.2),
+					transparent
+				);
+				transition: all 0.5s ease;
+			}
+
+			.game-btn:hover {
+				transform: translateY(-3px);
+				box-shadow: 0 8px 25px rgba(109, 40, 217, 0.4);
+			}
+
+			.game-btn:hover::before {
+				left: 100%;
+			}
+
+			/* Form styles */
+			.form-control {
+				background: var(--surface);
+				border: 1px solid rgba(255, 255, 255, 0.1);
+				color: var(--text);
+				padding: 0.75rem 1rem;
+				border-radius: 0.5rem;
+				transition: all 0.3s ease;
+			}
+
+			.form-control:focus {
+				outline: none;
+				border-color: var(--primary);
+				box-shadow: 0 0 0 2px rgba(109, 40, 217, 0.2);
+			}
+
+			.form-label {
+				color: var(--text-muted);
+				font-weight: 500;
+				margin-bottom: 0.5rem;
+				display: block;
+			}
+
+			/* Animation utilities */
+			@keyframes fade-in {
+				from {
+					opacity: 0;
+				}
+				to {
+					opacity: 1;
+				}
+			}
+
+			.fade-in {
+				animation: fade-in 0.5s ease;
+			}
+
+			@keyframes slide-up {
+				from {
+					transform: translateY(20px);
+					opacity: 0;
+				}
+				to {
+					transform: translateY(0);
+					opacity: 1;
+				}
+			}
+
+			.slide-up {
+				animation: slide-up 0.5s ease;
+			}
+
+			/* Delay animations */
+			.delay-100 {
+				animation-delay: 0.1s;
+			}
+			.delay-200 {
+				animation-delay: 0.2s;
+			}
+			.delay-300 {
+				animation-delay: 0.3s;
+			}
+
+			/* Table styles */
+			.game-table {
+				width: 100%;
+				border-radius: 1rem;
+				overflow: hidden;
+				box-shadow: 0 20px 30px -15px rgba(0, 0, 0, 0.3);
+				border-collapse: separate;
+				border-spacing: 0;
+				margin-bottom: 2rem;
+			}
+
+			.game-table thead {
+				background: var(--surface-light);
+			}
+
+			.game-table th {
+				padding: 1.25rem 1.5rem;
+				text-align: left;
+				font-weight: 600;
+				color: var(--text);
+				border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+			}
+
+			.game-table td {
+				padding: 1rem 1.5rem;
+				border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+				background-color: var(--surface);
+			}
+
+			.game-table tbody tr:hover td {
+				background-color: rgba(109, 40, 217, 0.1);
+			}
+
+			/* Page title */
+			.page-title {
+				font-size: 2.5rem;
+				font-weight: 800;
+				background: linear-gradient(
+					to right,
+					var(--primary),
+					var(--secondary)
+				);
+				-webkit-background-clip: text;
+				background-clip: text;
+				color: transparent;
+				margin-bottom: 1.5rem;
+				text-align: center;
+			}
+		</style>
+		{% block extra_css %}{% endblock %}
+	</head>
+	<body class="py-12 px-4">
+		<div class="max-w-4xl mx-auto">
+			<h1 class="page-title slide-up">TechQuest</h1>
+			<div class="slide-up delay-100">
+				{% block content %}{% endblock %}
+			</div>
+		</div>
+		{% block scripts %}{% endblock %}
+	</body>
 </html>

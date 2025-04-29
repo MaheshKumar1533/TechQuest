@@ -1,0 +1,39 @@
+{% extends 'base.html' %} {% block title %}Login / Register{% endblock %} {%
+block content %}
+<div class="game-card slide-up neon-border max-w-md mx-auto">
+	<div class="card-header">
+		<h2 class="text-2xl font-bold">Register / Login</h2>
+	</div>
+	<div class="p-6">
+		<form method="post">
+			{% csrf_token %}
+			<div class="mb-4">
+				<label for="username" class="form-label">Username:</label>
+				<input
+					type="text"
+					id="username"
+					name="username"
+					class="form-control w-full"
+					required
+				/>
+			</div>
+
+			<div class="mb-6">
+				<label for="password" class="form-label">Password:</label>
+				<input
+					type="password"
+					id="password"
+					name="password"
+					class="form-control w-full"
+					required
+				/>
+			</div>
+
+			<button type="submit" class="game-btn w-full">
+				<i class="fas fa-sign-in-alt mr-2"></i>
+				<span>Submit</span>
+			</button>
+		</form>
+	</div>
+</div>
+{% endblock %}

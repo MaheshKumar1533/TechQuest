@@ -1,222 +1,807 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Round {{ round.round_number }} - {{ quiz.title }}</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <script>
-        // Prevent accidental reload/close
-        window.onbeforeunload = function () {
-            return "Are you sure you want to leave? Your progress might be lost.";
-        };
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Round {{ round.round_number }} - {{ quiz.title }}</title>
+		<link
+			href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+			rel="stylesheet"
+		/>
+		<link
+			href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
+			rel="stylesheet"
+		/>
+		<link
+			rel="stylesheet"
+			href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+		/>
+		<style>
+			:root {
+				--primary: #6d28d9; /* Purple */
+				--primary-dark: #5b21b6;
+				--primary-light: #ddd6fe;
+				--secondary: #ec4899; /* Pink */
+				--accent: #10b981; /* Green */
+				--background: #0f172a; /* Dark blue */
+				--surface: #1e293b; /* Lighter blue */
+				--surface-light: #334155; /* Even lighter blue */
+				--text: #f8fafc;
+				--text-muted: #94a3b8;
+			}
 
-        // Request Fullscreen on load
-        document.addEventListener('DOMContentLoaded', () => {
-            const goFullScreen = () => {
-                const docEl = document.documentElement;
-                if (docEl.requestFullscreen) {
-                    docEl.requestFullscreen();
-                } else if (docEl.mozRequestFullScreen) {
-                    docEl.mozRequestFullScreen();
-                } else if (docEl.webkitRequestFullscreen) {
-                    docEl.webkitRequestFullscreen();
-                } else if (docEl.msRequestFullscreen) {
-                    docEl.msRequestFullscreen();
-                }
-            };
-            goFullScreen();
+			/* Base styles */
+			body {
+				font-family: "Outfit", sans-serif;
+				background-color: var(--background);
+				color: var(--text);
+				min-height: 100vh;
+				background-image: radial-gradient(
+						circle at 25% 25%,
+						rgba(109, 40, 217, 0.1) 0%,
+						transparent 40%
+					),
+					radial-gradient(
+						circle at 75% 75%,
+						rgba(236, 72, 153, 0.1) 0%,
+						transparent 40%
+					);
+			}
 
-            // Countdown Timer Logic
-            const endTime = new Date("{{ end_time }}");
-            const timerDisplay = document.createElement("div");
-            timerDisplay.className = "fixed top-4 right-4 bg-red-600 text-white px-4 py-2 rounded shadow-lg text-lg";
-            document.body.appendChild(timerDisplay);
+			/* Neon elements */
+			.neon-border {
+				border: 2px solid transparent;
+				border-radius: 0.5rem;
+				background-clip: padding-box;
+				position: relative;
+			}
 
-            function updateTimer() {
-                const now = new Date();
-                const remaining = endTime - now;
+			.neon-border::after {
+				content: "";
+				position: absolute;
+				top: -2px;
+				left: -2px;
+				right: -2px;
+				bottom: -2px;
+				background: linear-gradient(
+					45deg,
+					var(--primary),
+					var(--secondary),
+					var(--accent)
+				);
+				z-index: -1;
+				border-radius: 0.5rem;
+				animation: animate-border 3s linear infinite;
+			}
 
-                if (remaining <= 0) {
-                    timerDisplay.textContent = "Time's up! Submitting...";
-                    document.querySelector('form').submit();
-                    return;
-                }
+			@keyframes animate-border {
+				0% {
+					filter: blur(3px) hue-rotate(0deg);
+				}
+				100% {
+					filter: blur(3px) hue-rotate(360deg);
+				}
+			}
 
-                const minutes = Math.floor((remaining / 1000 / 60) % 60);
-                const seconds = Math.floor((remaining / 1000) % 60);
-                timerDisplay.textContent = `⏳ ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+			/* Card styles */
+			.game-card {
+				background: var(--surface);
+				border-radius: 1rem;
+				overflow: hidden;
+				box-shadow: 0 20px 30px -15px rgba(0, 0, 0, 0.3);
+				transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+				margin-bottom: 2rem;
+			}
 
-                setTimeout(updateTimer, 1000);
-            }
+			.game-card:hover {
+				transform: translateY(-8px);
+				box-shadow: 0 30px 40px -20px rgba(0, 0, 0, 0.4);
+			}
 
-            updateTimer();
-        });
+			.card-header {
+				position: relative;
+				background: var(--surface-light);
+				padding: 1.25rem 1.5rem;
+				display: flex;
+				align-items: center;
+				gap: 1rem;
+				border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+			}
 
-        function startTimer(questionId) {
-            var startTime = Date.now();
-            document.getElementById("q" + questionId).onchange = function () {
-                var endTime = Date.now();
-                var timeTaken = (endTime - startTime) / 1000;
-                document.getElementById('time_taken_' + questionId).value = timeTaken;
-            }
-        }
-    </script>
-</head>
-<body class="bg-gray-100 py-10 px-5">
+			.question-badge {
+				padding: 0.5rem 1rem;
+				background: var(--primary);
+				color: white;
+				font-weight: 600;
+				border-radius: 0.5rem;
+				box-shadow: 0 4px 15px rgba(109, 40, 217, 0.4);
+				font-size: 0.9rem;
+				letter-spacing: 0.5px;
+			}
 
-    <!-- Overlay for entering fullscreen -->
-    <div id="fullscreenOverlay" class="fixed inset-0 bg-black bg-opacity-90 flex flex-col items-center justify-center z-50 text-white">
-        <h1 class="text-3xl mb-6">🔒 Fullscreen Required</h1>
-        <button onclick="startQuiz()" class="bg-green-600 px-6 py-3 rounded text-lg">Start Quiz in Fullscreen</button>
-    </div>
-    
-    <!-- Quiz Form -->
-    <form method="post" id="quizForm" class="hidden">
-        {% csrf_token %}
-        <h1 class="text-2xl font-bold mb-4">{{ quiz.title }} - Round {{ round.round_number }}</h1>
-    
-        {% for question in questions %}
-        <div class="mb-6 p-4 bg-white rounded shadow">
-            <p class="mb-2 font-semibold">Q{{ forloop.counter }}. {{ question.text }}</p>
-            {% if question.image %}
-                <img src="{{ question.image.url }}" alt="Question Image" class="mb-2 max-h-48">
-            {% endif %}
-            
-            <div>
-                {% for option in question.shuffled_options %}
-                    <div class="form-check">
-                        <input class="form-check-input" type="radio" name="question_{{ question.id }}" value="{{ option }}" id="q{{ question.id }}_{{ forloop.counter }}" onchange="startTimer({{ question.id }})">
-                        <label class="form-check-label" for="q{{ question.id }}_{{ forloop.counter }}">
-                            {{ option }}
-                        </label>
-                    </div>
-                {% endfor %}
-            </div>
-    
-            <input type="hidden" name="time_taken_{{ question.id }}" id="time_taken_{{ question.id }}" value="0">
-        </div>
-        {% endfor %}
-    
-        <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded mt-4">Submit Round</button>
-    </form>
-    
-    <script>
-        function startQuiz() {
-            let el = document.documentElement;
-    
-            if (el.requestFullscreen) el.requestFullscreen();
-            else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
-            else if (el.mozRequestFullScreen) el.mozRequestFullScreen();
-            else if (el.msRequestFullscreen) el.msRequestFullscreen();
-    
-            document.getElementById('fullscreenOverlay').style.display = 'none';
-            document.getElementById('quizForm').classList.remove('hidden');
-    
-            startCountdown();
-        }
-    
-        function checkFullscreen() {
-            return document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
-        }
-    
-        function enforceFullscreen() {
-            if (!checkFullscreen()) {
-                document.getElementById('fullscreenOverlay').style.display = 'flex';
-                document.getElementById('quizForm').classList.add('hidden');
-            }
-        }
-    
-        document.addEventListener('fullscreenchange', enforceFullscreen);
-        document.addEventListener('webkitfullscreenchange', enforceFullscreen);
-        document.addEventListener('mozfullscreenchange', enforceFullscreen);
-        document.addEventListener('MSFullscreenChange', enforceFullscreen);
-    
-        function startTimer(questionId) {
-            var startTime = Date.now();
-            document.getElementById("q" + questionId).onchange = function () {
-                var endTime = Date.now();
-                var timeTaken = (endTime - startTime) / 1000;
-                document.getElementById('time_taken_' + questionId).value = timeTaken;
-            }
-        }
-    
-        function startCountdown() {
-            const endTime = new Date("{{ end_time }}");
-            const timerDisplay = document.createElement("div");
-            timerDisplay.className = "fixed top-4 right-4 bg-red-600 text-white px-4 py-2 rounded shadow-lg text-lg z-50";
-            document.body.appendChild(timerDisplay);
-    
-            function updateTimer() {
-                const now = new Date();
-                const remaining = endTime - now;
-    
-                if (remaining <= 0) {
-                    timerDisplay.textContent = "Time's up! Submitting...";
-                    document.querySelector('form').submit();
-                    return;
-                }
-    
-                const minutes = Math.floor((remaining / 1000 / 60) % 60);
-                const seconds = Math.floor((remaining / 1000) % 60);
-                timerDisplay.textContent = `⏳ ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-    
-                setTimeout(updateTimer, 1000);
-            }
-    
-            updateTimer();
-        }
-    
-        window.onbeforeunload = function () {
-            return "Are you sure you want to leave? Your progress might be lost.";
-        };
-    </script>
-    <script>
-        let exitCount = 0;
-        const maxExitCount = 3;
-    
-        function checkFullscreen() {
-            return document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
-        }
-    
-        function enforceFullscreen() {
-            if (!checkFullscreen()) {
-                exitCount++;
-                document.getElementById('exitCountDisplay').textContent = exitCount;
-                document.getElementById('exitWarning').classList.remove('hidden');
-    
-                // Optional: End quiz if limit exceeded
-                if (exitCount >= maxExitCount) {
-                    alert("❌ You have exited fullscreen too many times. Your quiz will be terminated.");
-                    document.querySelector('form').submit(); // auto-submit or redirect
-                }
-    
-                // Show fullscreen overlay again
-                document.getElementById('fullscreenOverlay').style.display = 'flex';
-                document.getElementById('quizForm').classList.add('hidden');
-            }
-        }
-    
-        document.addEventListener('fullscreenchange', enforceFullscreen);
-        document.addEventListener('webkitfullscreenchange', enforceFullscreen);
-        document.addEventListener('mozfullscreenchange', enforceFullscreen);
-        document.addEventListener('MSFullscreenChange', enforceFullscreen);
-    
-        window.addEventListener('DOMContentLoaded', () => {
-            const input = document.createElement("input");
-            input.type = "hidden";
-            input.name = "fullscreen_exit_count";
-            input.id = "fullscreen_exit_count";
-            input.value = "0";
-            document.getElementById("quizForm").appendChild(input);
-    
-            // Update on submit
-            document.getElementById("quizForm").addEventListener("submit", () => {
-                document.getElementById("fullscreen_exit_count").value = exitCount;
-            });
-        });
-    </script>
-    
-    </body>
-    
+			/* Option styles */
+			.option-container {
+				margin-top: 1.25rem;
+				margin-bottom: 0.75rem;
+			}
+
+			.option-item {
+				background: var(--surface-light);
+				border-radius: 0.5rem;
+				margin-bottom: 0.75rem;
+				overflow: hidden;
+				transition: all 0.2s ease;
+				cursor: pointer;
+				position: relative;
+				border: 1px solid rgba(255, 255, 255, 0.08);
+			}
+
+			.option-item:hover {
+				transform: translateY(-3px);
+				box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+				border-color: var(--primary-light);
+			}
+
+			.option-item.selected {
+				background: linear-gradient(
+					90deg,
+					rgba(109, 40, 217, 0.3),
+					rgba(109, 40, 217, 0.1)
+				);
+				border-color: var(--primary);
+				box-shadow: 0 5px 15px rgba(109, 40, 217, 0.3);
+			}
+
+			.option-label {
+				padding: 1rem 1.25rem;
+				display: block;
+				width: 100%;
+				position: relative;
+				padding-left: 2.5rem;
+				font-weight: 500;
+			}
+
+			.option-radio {
+				position: absolute;
+				opacity: 0;
+				cursor: pointer;
+				height: 0;
+				width: 0;
+			}
+
+			.checkmark {
+				position: absolute;
+				top: 50%;
+				transform: translateY(-50%);
+				left: 1rem;
+				height: 1.25rem;
+				width: 1.25rem;
+				border-radius: 50%;
+				border: 2px solid var(--text-muted);
+				transition: all 0.2s ease;
+			}
+
+			.option-item:hover .checkmark {
+				border-color: var(--primary-light);
+			}
+
+			.option-item.selected .checkmark {
+				border-color: var(--primary);
+				background-color: var(--primary);
+			}
+
+			.checkmark:after {
+				content: "";
+				position: absolute;
+				display: none;
+				top: 50%;
+				left: 50%;
+				transform: translate(-50%, -50%);
+				width: 0.5rem;
+				height: 0.5rem;
+				border-radius: 50%;
+				background: white;
+			}
+
+			.option-item.selected .checkmark:after {
+				display: block;
+			}
+
+			/* Button styles */
+			.game-btn {
+				background: linear-gradient(
+					45deg,
+					var(--primary),
+					var(--secondary)
+				);
+				color: white;
+				font-weight: 600;
+				padding: 0.875rem 2rem;
+				border-radius: 0.5rem;
+				box-shadow: 0 5px 20px rgba(109, 40, 217, 0.3);
+				transition: all 0.3s ease;
+				position: relative;
+				overflow: hidden;
+				border: none;
+				cursor: pointer;
+				letter-spacing: 0.5px;
+				display: inline-flex;
+				align-items: center;
+				justify-content: center;
+				gap: 0.5rem;
+			}
+
+			.game-btn::before {
+				content: "";
+				position: absolute;
+				top: 0;
+				left: -100%;
+				width: 100%;
+				height: 100%;
+				background: linear-gradient(
+					90deg,
+					transparent,
+					rgba(255, 255, 255, 0.2),
+					transparent
+				);
+				transition: all 0.5s ease;
+			}
+
+			.game-btn:hover {
+				transform: translateY(-3px);
+				box-shadow: 0 8px 25px rgba(109, 40, 217, 0.4);
+			}
+
+			.game-btn:hover::before {
+				left: 100%;
+			}
+
+			/* Timer styles */
+			.game-timer {
+				position: fixed;
+				top: 1.5rem;
+				right: 1.5rem;
+				background: linear-gradient(45deg, #ef4444, #f43f5e);
+				padding: 0.75rem 1.25rem;
+				border-radius: 0.5rem;
+				font-weight: 700;
+				display: flex;
+				align-items: center;
+				gap: 0.5rem;
+				box-shadow: 0 5px 20px rgba(239, 68, 68, 0.3);
+				z-index: 50;
+			}
+
+			.timer-icon {
+				color: white;
+				animation: pulse 1.5s infinite;
+			}
+
+			@keyframes pulse {
+				0% {
+					opacity: 1;
+				}
+				50% {
+					opacity: 0.5;
+				}
+				100% {
+					opacity: 1;
+				}
+			}
+
+			.critical-time {
+				animation: critical-pulse 0.8s infinite;
+			}
+
+			@keyframes critical-pulse {
+				0% {
+					transform: scale(1);
+					box-shadow: 0 5px 20px rgba(239, 68, 68, 0.3);
+				}
+				50% {
+					transform: scale(1.05);
+					box-shadow: 0 5px 30px rgba(239, 68, 68, 0.5);
+				}
+				100% {
+					transform: scale(1);
+					box-shadow: 0 5px 20px rgba(239, 68, 68, 0.3);
+				}
+			}
+
+			/* Progress bar styles */
+			.progress-container {
+				width: 100%;
+				height: 5px;
+				background: var(--surface-light);
+				border-radius: 5px;
+				overflow: hidden;
+				margin-bottom: 1.5rem;
+			}
+
+			.progress-bar {
+				height: 100%;
+				background: linear-gradient(
+					90deg,
+					var(--primary),
+					var(--secondary)
+				);
+				border-radius: 5px;
+				transition: width 0.2s ease;
+			}
+
+			/* Fullscreen overlay */
+			.fs-overlay {
+				position: fixed;
+				inset: 0;
+				background: rgba(15, 23, 42, 0.9);
+				backdrop-filter: blur(10px);
+				z-index: 100;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+			}
+
+			.fs-content {
+				background: var(--surface);
+				border-radius: 1rem;
+				padding: 2.5rem;
+				width: 100%;
+				max-width: 500px;
+				box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+				text-align: center;
+				border: 1px solid rgba(255, 255, 255, 0.1);
+				animation: scale-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+			}
+
+			@keyframes scale-in {
+				from {
+					transform: scale(0.8);
+					opacity: 0;
+				}
+				to {
+					transform: scale(1);
+					opacity: 1;
+				}
+			}
+
+			/* Warning banner */
+			.warning-banner {
+				position: fixed;
+				top: 0;
+				left: 0;
+				right: 0;
+				background: linear-gradient(90deg, #f59e0b, #d97706);
+				padding: 0.75rem;
+				text-align: center;
+				z-index: 90;
+				font-weight: 600;
+				color: white;
+				animation: slide-down 0.4s ease;
+			}
+
+			@keyframes slide-down {
+				from {
+					transform: translateY(-100%);
+				}
+				to {
+					transform: translateY(0);
+				}
+			}
+
+			/* Progress indicator */
+			.step-progress {
+				display: flex;
+				justify-content: center;
+				margin-bottom: 2rem;
+			}
+
+			.step-item {
+				width: 12px;
+				height: 12px;
+				border-radius: 50%;
+				background: var(--surface-light);
+				margin: 0 4px;
+				transition: all 0.3s ease;
+			}
+
+			.step-item.completed {
+				background: var(--primary);
+				box-shadow: 0 0 10px rgba(109, 40, 217, 0.5);
+			}
+
+			/* Image styles */
+			.question-image {
+				border-radius: 0.5rem;
+				border: 1px solid rgba(255, 255, 255, 0.1);
+				max-height: 300px;
+				object-fit: contain;
+				box-shadow: 0 10px 30px -15px rgba(0, 0, 0, 0.3);
+			}
+
+			/* Animation utilities */
+			@keyframes fade-in {
+				from {
+					opacity: 0;
+				}
+				to {
+					opacity: 1;
+				}
+			}
+
+			.fade-in {
+				animation: fade-in 0.5s ease;
+			}
+
+			@keyframes slide-up {
+				from {
+					transform: translateY(20px);
+					opacity: 0;
+				}
+				to {
+					transform: translateY(0);
+					opacity: 1;
+				}
+			}
+
+			.slide-up {
+				animation: slide-up 0.5s ease;
+			}
+
+			/* Delay animations */
+			.delay-100 {
+				animation-delay: 0.1s;
+			}
+			.delay-200 {
+				animation-delay: 0.2s;
+			}
+			.delay-300 {
+				animation-delay: 0.3s;
+			}
+			.delay-400 {
+				animation-delay: 0.4s;
+			}
+			.delay-500 {
+				animation-delay: 0.5s;
+			}
+		</style>
+	</head>
+	<body class="py-12 px-4">
+		<!-- Warning banner (hidden by default) -->
+		<div id="exitWarning" class="warning-banner hidden">
+			<div class="flex items-center justify-center gap-2">
+				<i class="fas fa-exclamation-triangle"></i>
+				<span
+					>Warning: You've exited fullscreen
+					<span
+						id="exitCountDisplay"
+						class="px-2 py-0.5 bg-amber-800 rounded-full mx-1"
+						>0</span
+					>/<span id="maxExitDisplay">3</span> times</span
+				>
+			</div>
+		</div>
+
+		<!-- Fullscreen overlay -->
+		<div id="fullscreenOverlay" class="fs-overlay">
+			<div class="fs-content slide-up">
+				<div class="mb-6 text-6xl">🎮</div>
+				<h1 class="text-3xl font-bold mb-4">Ready to Start?</h1>
+				<p class="text-text-muted mb-8">
+					This quiz requires fullscreen mode. Get ready to test your
+					knowledge!
+				</p>
+				<button onclick="startQuiz()" class="game-btn w-full">
+					<i class="fas fa-play mr-2"></i> Enter Fullscreen & Begin
+				</button>
+			</div>
+		</div>
+
+		<!-- Timer display (will be created by JS) -->
+
+		<!-- Main quiz container -->
+		<div class="max-w-3xl mx-auto pb-20 hidden" id="quizForm">
+			<form method="post">
+				{% csrf_token %}
+
+				<!-- Quiz header -->
+				<div class="text-center mb-10 slide-up">
+					<h1
+						class="text-4xl font-extrabold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary"
+					>
+						{{ quiz.title }}
+					</h1>
+					<p class="text-text-muted">
+						Round {{ round.round_number }}
+					</p>
+
+					<!-- Progress dots -->
+					<div class="step-progress mt-6">
+						{% for question in questions %}
+						<div
+							class="step-item"
+							id="step-{{ forloop.counter }}"
+						></div>
+						{% endfor %}
+					</div>
+				</div>
+
+				<!-- Progress bar -->
+				<div class="progress-container slide-up delay-100">
+					<div
+						class="progress-bar"
+						id="quiz-progress"
+						style="width: 0%"
+					></div>
+				</div>
+
+				<!-- Questions -->
+				{% for question in questions %}
+				<div
+					class="game-card slide-up delay-200"
+					id="question-card-{{ forloop.counter }}"
+				>
+					<div class="card-header">
+						<div class="question-badge">
+							Question {{ forloop.counter }}
+						</div>
+						<h3 class="font-medium">{{ question.text }}</h3>
+					</div>
+
+					<!-- Question image (if any) -->
+					{% if question.image %}
+					<div class="p-5 flex justify-center">
+						<img
+							src="{{ question.image.url }}"
+							alt="Question image"
+							class="question-image"
+						/>
+					</div>
+					{% endif %}
+
+					<!-- Options -->
+					<div class="p-5">
+						<div class="option-container">
+							{% for option in question.shuffled_options %}
+							<div
+								class="option-item"
+								id="option-{{ question.id }}-{{ forloop.counter }}"
+								onclick="selectOption(this, '{{ question.id }}', {{ forloop.counter }})"
+							>
+								<label class="option-label">
+									{{ option }}
+									<input
+										type="radio"
+										class="option-radio"
+										name="question_{{ question.id }}"
+										value="{{ option }}"
+										id="q{{ question.id }}_{{ forloop.counter }}"
+									/>
+									<span class="checkmark"></span>
+								</label>
+							</div>
+							{% endfor %}
+						</div>
+					</div>
+
+					<input
+						type="hidden"
+						name="time_taken_{{ question.id }}"
+						id="time_taken_{{ question.id }}"
+						value="0"
+					/>
+				</div>
+				{% endfor %}
+
+				<!-- Submit button -->
+				<div class="flex justify-center mt-8 slide-up delay-300">
+					<button type="submit" class="game-btn">
+						<span>Submit Answers</span>
+						<i class="fas fa-paper-plane"></i>
+					</button>
+				</div>
+
+				<!-- Hidden field for fullscreen exit count -->
+				<input
+					type="hidden"
+					name="fullscreen_exit_count"
+					id="fullscreen_exit_count"
+					value="0"
+				/>
+			</form>
+		</div>
+
+		<script>
+			// Global variables
+			let exitCount = 0;
+			const maxExitCount = 3;
+			const questionTimers = {};
+			let currentProgress = 0;
+
+			// Function to start the quiz
+			function startQuiz() {
+			    let el = document.documentElement;
+
+			    if (el.requestFullscreen) el.requestFullscreen();
+			    else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+			    else if (el.mozRequestFullScreen) el.mozRequestFullScreen();
+			    else if (el.msRequestFullscreen) el.msRequestFullscreen();
+
+			    document.getElementById('fullscreenOverlay').style.display = 'none';
+			    document.getElementById('quizForm').classList.remove('hidden');
+
+			    startCountdown();
+			    initQuestionTimers();
+			    updateProgress();
+			}
+
+			// Function to check fullscreen status
+			function checkFullscreen() {
+			    return document.fullscreenElement ||
+			           document.webkitFullscreenElement ||
+			           document.mozFullScreenElement ||
+			           document.msFullscreenElement;
+			}
+
+			// Function to enforce fullscreen
+			function enforceFullscreen() {
+			    if (!checkFullscreen()) {
+			        exitCount++;
+			        document.getElementById('exitCountDisplay').textContent = exitCount;
+			        document.getElementById('exitWarning').classList.remove('hidden');
+
+			        // End quiz if limit exceeded
+			        if (exitCount >= maxExitCount) {
+			            alert("You have exited fullscreen too many times. Your quiz will be terminated.");
+			            document.querySelector('form').submit();
+			        }
+
+			        // Show fullscreen overlay again
+			        document.getElementById('fullscreenOverlay').style.display = 'flex';
+			        document.getElementById('quizForm').classList.add('hidden');
+			    } else {
+			        // Hide warning when back in fullscreen
+			        document.getElementById('exitWarning').classList.add('hidden');
+			    }
+			}
+
+			// Function to select an option
+			function selectOption(element, questionId, optionNum) {
+			    // Get all options for this question
+			    const questionOptions = document.querySelectorAll(`[id^="option-${questionId}-"]`);
+
+			    // Remove 'selected' class from all options
+			    questionOptions.forEach(option => {
+			        option.classList.remove('selected');
+			    });
+
+			    // Add 'selected' class to clicked option
+			    element.classList.add('selected');
+
+			    // Check the radio button
+			    const radio = document.getElementById(`q${questionId}_${optionNum}`);
+			    radio.checked = true;
+
+			    // Record time taken
+			    recordTimeTaken(questionId);
+
+			    // Update step progress
+			    updateStepProgress();
+
+			    // Update overall progress
+			    updateProgress();
+			}
+
+			// Initialize timers for all questions
+			function initQuestionTimers() {
+			    {% for question in questions %}
+			    questionTimers["{{ question.id }}"] = {
+			        startTime: Date.now(),
+			        recorded: false
+			    };
+			    {% endfor %}
+			}
+
+			// Record time taken to answer a question
+			function recordTimeTaken(questionId) {
+			    if (!questionTimers[questionId].recorded) {
+			        const endTime = Date.now();
+			        const timeTaken = (endTime - questionTimers[questionId].startTime) / 1000;
+			        document.getElementById(`time_taken_${questionId}`).value = timeTaken;
+			        questionTimers[questionId].recorded = true;
+			    }
+			}
+
+			// Update the step progress indicators
+			function updateStepProgress() {
+			    const totalQuestions = {{ questions|length }};
+			    let answeredCount = 0;
+
+			    {% for question in questions %}
+			    const questionAnswered{{ forloop.counter }} = document.querySelector('input[name="question_{{ question.id }}"]:checked') !== null;
+			    if (questionAnswered{{ forloop.counter }}) {
+			        document.getElementById('step-{{ forloop.counter }}').classList.add('completed');
+			        answeredCount++;
+			    }
+			    {% endfor %}
+
+			    // Update the progress bar
+			    currentProgress = (answeredCount / totalQuestions) * 100;
+			    document.getElementById('quiz-progress').style.width = `${currentProgress}%`;
+			}
+
+			// Update overall progress
+			function updateProgress() {
+			    const totalQuestions = {{ questions|length }};
+			    let answeredCount = 0;
+
+			    {% for question in questions %}
+			    if (document.querySelector('input[name="question_{{ question.id }}"]:checked') !== null) {
+			        answeredCount++;
+			    }
+			    {% endfor %}
+
+			    // Update the progress bar
+			    currentProgress = (answeredCount / totalQuestions) * 100;
+			    document.getElementById('quiz-progress').style.width = `${currentProgress}%`;
+			}
+
+			// Function to start countdown timer
+			function startCountdown() {
+			    const endTime = new Date("{{ end_time }}");
+			    const timerDisplay = document.createElement("div");
+			    timerDisplay.className = "game-timer";
+			    timerDisplay.innerHTML = `
+			        <i class="fas fa-clock timer-icon"></i>
+			        <span id="timer-countdown" class="font-mono"></span>
+			    `;
+			    document.body.appendChild(timerDisplay);
+
+			    function updateTimer() {
+			        const now = new Date();
+			        const remaining = endTime - now;
+
+			        if (remaining <= 0) {
+			            timerDisplay.innerHTML = `
+			                <i class="fas fa-bell"></i>
+			                <span>Time's Up!</span>
+			            `;
+			            document.querySelector('form').submit();
+			            return;
+			        }
+
+			        const minutes = Math.floor((remaining / 1000 / 60) % 60);
+			        const seconds = Math.floor((remaining / 1000) % 60);
+			        document.getElementById('timer-countdown').textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+			        // Add urgency animation when time is running low
+			        if (minutes === 0 && seconds <= 30) {
+			            timerDisplay.classList.add('critical-time');
+			        }
+
+			        setTimeout(updateTimer, 1000);
+			    }
+
+			    updateTimer();
+			}
+
+			// Event listeners for fullscreen changes
+			document.addEventListener('fullscreenchange', enforceFullscreen);
+			document.addEventListener('webkitfullscreenchange', enforceFullscreen);
+			document.addEventListener('mozfullscreenchange', enforceFullscreen);
+			document.addEventListener('MSFullscreenChange', enforceFullscreen);
+
+			// Initialize on DOMContentLoaded
+			document.addEventListener('DOMContentLoaded', function() {
+			    // Update fullscreen exit count on form submission
+			    document.querySelector('form').addEventListener('submit', function() {
+			        document.getElementById('fullscreen_exit_count').value = exitCount;
+			    });
+			});
+
+			// Prevent accidental reload/close
+			window.onbeforeunload = function() {
+			    return "Are you sure you want to leave? Your progress might be lost.";
+			};
+		</script>
+	</body>
 </html>

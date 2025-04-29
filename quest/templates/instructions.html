@@ -1,49 +1,103 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ quiz.title }} - Round {{ round.round_number }} Instructions</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <script>
-        var countdownTime = {{ minutes }} * 60 + {{ seconds }}; // in seconds
+{% extends 'base.html' %} {% block title %}{{ quiz.title }} - Round {{
+round.round_number }} Instructions{% endblock %} {% block content %}
+<div class="game-card slide-up max-w-xl mx-auto">
+	<div class="card-header">
+		<i class="fas fa-book text-2xl text-blue-400"></i>
+		<h2 class="text-2xl font-bold">
+			Instructions: Round {{ round.round_number }}
+		</h2>
+	</div>
+	<div class="p-6">
+		<p class="mb-6 text-text-muted">
+			Please read the following instructions carefully before starting the
+			quiz:
+		</p>
 
-        function updateTimer() {
-            var timerElement = document.getElementById("timer");
-            var minutes = Math.floor(countdownTime / 60);
-            var seconds = countdownTime % 60;
-            timerElement.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+		<div class="bg-surface-light/50 p-5 rounded-lg mb-6">
+			<ul class="space-y-3">
+				<li class="flex items-start">
+					<i class="fas fa-clock text-pink-400 mt-1 mr-3"></i>
+					<span
+						>Each round has a specific time limit. Use your time
+						wisely!</span
+					>
+				</li>
+				<li class="flex items-start">
+					<i class="fas fa-check-circle text-green-400 mt-1 mr-3"></i>
+					<span
+						>Make sure to answer all questions to the best of your
+						ability.</span
+					>
+				</li>
+				<li class="flex items-start">
+					<i class="fas fa-gamepad text-purple-400 mt-1 mr-3"></i>
+					<span
+						>You must stay in fullscreen mode throughout the
+						quiz.</span
+					>
+				</li>
+				<li class="flex items-start">
+					<i class="fas fa-paper-plane text-blue-400 mt-1 mr-3"></i>
+					<span
+						>Once you complete the round, submit your answers.</span
+					>
+				</li>
+			</ul>
+		</div>
 
-            if (countdownTime <= 0) {
-                clearInterval(timerInterval);
-                document.getElementById('proceed-button').disabled = false;  // Enable Proceed Button
-            }
-            countdownTime--;
-        }
+		<div class="mt-6 text-center">
+			<div class="mb-8">
+				<p class="text-lg text-text-muted mb-2">Time Remaining:</p>
+				<div
+					class="game-timer mx-auto inline-flex px-6 py-3 text-xl bg-gradient-to-r from-red-600 to-pink-600 rounded-lg"
+				>
+					<i class="fas fa-clock mt-1 mr-3"></i>
+					<span id="timer" class="font-mono font-bold"
+						>{{ minutes }}:{{ seconds }}</span
+					>
+				</div>
+			</div>
 
-        var timerInterval = setInterval(updateTimer, 1000);
-        window.onload = updateTimer;
-    </script>
-</head>
-<body class="bg-gray-100 flex justify-center items-center h-screen">
-    <div class="bg-white p-6 rounded shadow-md w-96">
-        <h1 class="text-xl font-bold mb-4">{{ quiz.title }} - Round {{ round.round_number }} Instructions</h1>
-        <p class="mb-4">Please read the following instructions carefully before starting the quiz:</p>
-        
-        <ul>
-            <li>Each round has a specific time limit.</li>
-            <li>Make sure to answer all questions to the best of your ability.</li>
-            <li>Once you complete the round, submit your answers.</li>
-        </ul>
+			<!-- Proceed Button -->
+			<button
+				id="proceed-button"
+				class="game-btn w-full"
+				disabled
+				onclick="window.location.href='/quiz/{{ quiz.id }}/round/{{ round.round_number }}/';"
+			>
+				<i class="fas fa-play mr-2"></i>
+				Proceed to Round {{ round.round_number }}
+			</button>
+		</div>
+	</div>
+</div>
+{% endblock %} {% block scripts %}
+<script>
+	var countdownTime = {{ minutes }} * 60 + {{ seconds }}; // in seconds
 
-        <div class="mt-4 text-center text-lg">
-            <p>Time Remaining: <span id="timer">{{ minutes }}:{{ seconds }}</span></p>
-        </div>
+	function updateTimer() {
+	    var timerElement = document.getElementById("timer");
+	    var minutes = Math.floor(countdownTime / 60);
+	    var seconds = countdownTime % 60;
+	    timerElement.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
 
-        <!-- Proceed Button -->
-        <button id="proceed-button" class="mt-6 w-full bg-green-500 text-white py-2 rounded" disabled onclick="window.location.href='/quiz/{{ quiz.id }}/round/{{ round.round_number }}/';">
-            Proceed to Round {{ round.round_number }}
-        </button>
-    </div>
-</body>
-</html>
+	    if (countdownTime <= 0) {
+	        clearInterval(timerInterval);
+	        document.getElementById('proceed-button').disabled = false;
+
+	        // Add animation to the button
+	        document.getElementById('proceed-button').classList.add('animate-pulse');
+
+	        // Add a notification
+	        var notification = document.createElement('div');
+	        notification.className = 'mt-4 p-3 bg-green-900/30 border border-green-700/50 rounded-lg text-green-300 flex items-center justify-center';
+	        notification.innerHTML = '<i class="fas fa-bell mr-2"></i> You can now proceed to the quiz!';
+	        document.getElementById('proceed-button').parentNode.insertBefore(notification, document.getElementById('proceed-button'));
+	    }
+	    countdownTime--;
+	}
+
+	var timerInterval = setInterval(updateTimer, 1000);
+	window.onload = updateTimer;
+</script>
+{% endblock %}
